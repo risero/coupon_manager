@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import { Button, Form, FormItem, Input, Container, Aside, Header, Footer, Main, Menu, MenuItem, Submenu
-  ,MenuItemGroup, RadioGroup, RadioButton, Row, Col, Table, TableColumn, Option, Select } from 'element-ui'
+  ,MenuItemGroup, RadioGroup, RadioButton, Row, Col, Table, TableColumn, Option, Select, Pagination } from 'element-ui'
 Vue.use(Button)
 Vue.use(Form)
 Vue.use(FormItem)
@@ -28,5 +28,6 @@ Vue.use(TableColumn)
 
 Vue.use(Option)
 Vue.use(Select)
+Vue.use(Pagination)
 
 

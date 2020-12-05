@@ -7,6 +7,7 @@ const routes = [
   {
     path: '/',
     component: () => import('@/views/index'),
+    redirect: '/product/list',
     children: [
       // 商品管理
       {
