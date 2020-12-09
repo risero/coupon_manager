@@ -97,6 +97,7 @@ export default {
         shopName: '',
         appType: ''
       },
+      productList: [],
       tableData: [{
         date: '2016-05-03',
         name: '王小虎',
@@ -164,7 +165,15 @@ export default {
         shopName: searchForm.shopName
       }
       this.$http.post("/product/list", data).then((res) => {
-        // debugger
+        if (res.status == 200) {
+          let records = res.data.records
+          this.page.curPage = res.data.page
+          this.page.totalSize = res.data.totalSize
+          /*for () {
+
+          }*/
+        }
+        debugger
       })
     }
   },

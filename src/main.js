@@ -8,12 +8,25 @@ import '@/assets/font/iconfont.css'
 import axios from 'axios'
 import Qs from 'qs'
 Vue.prototype.$http = axios
+/**
+ * 对请求的数据做处理
+ */
 Vue.prototype.$http.interceptors.request.use(function (config) {
   if (config.data) {
     config.data = Qs.stringify(config.data)
     return config
   }
 })
+
+/**
+ * 对响应的数据做处理
+ */
+axios.interceptors.response.use(res=>{
+  if (res && res.data) {
+    return res.data
+  }
+})
+
 axios.defaults.baseURL = 'http://localhost:8080'
 // 引入全局通用样式
 import '@/assets/css/global.css'
