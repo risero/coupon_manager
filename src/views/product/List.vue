@@ -98,6 +98,20 @@ export default {
         appType: ''
       },
       productList: [],
+      productPlatformList: [
+        {
+          "type": 1,
+          "name": "天猫"
+        },
+        {
+          "type": 2,
+          "name": "淘宝"
+        },
+        {
+          "type": 3,
+          "name": "拼多多"
+        }
+      ],
       tableData: [{
         date: '2016-05-03',
         name: '王小虎',
@@ -169,9 +183,7 @@ export default {
           let records = res.data.records
           this.page.curPage = res.data.page
           this.page.totalSize = res.data.totalSize
-          /*for () {
-
-          }*/
+          this.productList = res.data.records
         }
         debugger
       })
