@@ -1,6 +1,10 @@
 import Vue from 'vue'
 import { Button, Form, FormItem, Input, Container, Aside, Header, Footer, Main, Menu, MenuItem, Submenu
-  ,MenuItemGroup, RadioGroup, RadioButton, Row, Col, Table, TableColumn, Option, Select, Pagination } from 'element-ui'
+  ,MenuItemGroup, RadioGroup, RadioButton, Row, Col, Table, TableColumn, Option, Select, Pagination, Dialog
+  ,Upload, BreadcrumbItem, Breadcrumb, Message } from 'element-ui'
+
+Vue.prototype.$message = Message
+
 Vue.use(Button)
 Vue.use(Form)
 Vue.use(FormItem)
@@ -29,5 +33,10 @@ Vue.use(TableColumn)
 Vue.use(Option)
 Vue.use(Select)
 Vue.use(Pagination)
+
+Vue.use(Dialog)
+Vue.use(Upload)
+Vue.use(BreadcrumbItem)
+Vue.use(Breadcrumb)
 
 

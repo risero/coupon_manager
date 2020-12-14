@@ -4,3 +4,12 @@ html, body, #app {
     height: 100%;
     width: 100%;
 }
+
+/* 进度条没有效果 */
+#nprogress .bar {
+    z-index: 15031;
+    background: red !important;
+}
+#nprogress .spinner {
+    z-index: 15031;
+}

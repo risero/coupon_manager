@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+import NProgress from 'nprogress'
 
 Vue.use(VueRouter)
 
@@ -9,10 +10,15 @@ const routes = [
     component: () => import('@/views/index'),
     redirect: '/product/list',
     children: [
-      // 商品管理
+      // 商品列表
       {
         path: '/product/list',
         component: ()=> import('@/views/product/List')
+      },
+      // 商品编辑
+      {
+        path: '/product/edit',
+        component: ()=> import('@/views/product/Edit')
       },
       // 分类管理
       {
@@ -35,6 +41,15 @@ const routes = [
 
 const router = new VueRouter({
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  NProgress.start()
+  next()
+})
+
+router.afterEach(() => {
+  NProgress.done()
 })
 
 export default router

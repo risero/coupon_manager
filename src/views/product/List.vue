@@ -1,88 +1,99 @@
 <template>
-  <div class="main_content" ref="mainContent" :model="searchForm">
-    <div class="main_content" ref="searchForm">
-      <el-form :inline="true" class="demo-form-inline search_form">
-        <el-form-item>
-          <el-input v-model="searchForm.title" placeholder="请输入商品名称"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-input v-model="searchForm.shopName" placeholder="请输入店铺名称"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="searchForm.appType" placeholder="请选择平台类型">
-            <el-option label="全部" value=""></el-option>
-            <el-option label="天猫" value="1"></el-option>
-            <el-option label="淘宝" value="2"></el-option>
-            <el-option label="拼多多" value="3"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="search">查询</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+  <div class="container">
+    <!-- 面包屑路由 -->
+    <breadcrumb ref="breadcrumb" breadcrumbs="商品管理,商品列表"></breadcrumb>
 
-    <!-- 列表 -->
-    <div class="list_content">
-      <div class="button_list" ref="buttonList">
-        <!-- 按钮 -->
-        <el-button type="success" class="el-icon-plus">新增</el-button>
-        <el-button type="primary" class="el-icon-edit">修改</el-button>
-        <el-button type="danger" class="el-icon-delete">删除</el-button>
+    <!-- 商品列表页 -->
+    <div class="main_content" ref="mainContent" :model="searchForm">
+      <div class="main_content" ref="searchForm">
+        <el-form :inline="true" class="demo-form-inline search_form">
+          <el-form-item>
+            <el-input v-model="searchForm.title" placeholder="请输入商品名称"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-input v-model="searchForm.shopName" placeholder="请输入店铺名称"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="searchForm.appType" placeholder="请选择平台类型">
+              <el-option label="全部" value=""></el-option>
+              <el-option label="天猫" value="1"></el-option>
+              <el-option label="淘宝" value="2"></el-option>
+              <el-option label="拼多多" value="3"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="search">查询</el-button>
+          </el-form-item>
+        </el-form>
       </div>
 
-      <!-- 表格 -->
-      <el-table class="table_list"
-        ref="tableList"
-        :data="tableData"
-        tooltip-effect="dark"
-        @selection-change="handleSelectionChange"
-        :height="tableHeight">
-        <el-table-column class="table_column_field" type="selection"></el-table-column>
-        <el-table-column
-          label="商品平台">
-          <template slot-scope="scope">{{ scope.row.date }}</template>
-        </el-table-column>
-        <el-table-column
-          prop="address"
-          label="店铺"
-          show-overflow-tooltip>
-        </el-table-column>
-        <el-table-column
-          prop="name"
-          label="商品名称">
-        </el-table-column>
-        <el-table-column
-          prop="address"
-          label="商品分类"
-          show-overflow-tooltip>
-        </el-table-column>
-        <el-table-column
-          prop="address"
-          label="活动截止时间"
-          show-overflow-tooltip>
-        </el-table-column>
-      </el-table>
+      <!-- 列表 -->
+      <div class="list_content">
+        <div class="button_list" ref="buttonList">
+          <!-- 按钮 -->
+          <el-button type="success" class="el-icon-plus" @click="jumpPage">新增</el-button>
+          <el-button type="primary" class="el-icon-edit" @click="jumpPage">编辑</el-button>
+          <el-button type="danger" class="el-icon-delete">删除</el-button>
+        </div>
 
-      <!-- 分页 -->
-      <div class="table_pagination block" ref="pagination">
-        <el-pagination
-          background
-          @size-change="search"
-          @current-change="search"
-          :current-page="page.curPage"
-          :page-sizes="page.sizes"
-          :page-size="page.size"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="page.totalSize">
-        </el-pagination>
+        <!-- 表格 -->
+        <el-table class="table_list"
+                  ref="tableList"
+                  :data="productList"
+                  tooltip-effect="dark"
+                  @selection-change="handleSelectionChange"
+                  :height="tableHeight">
+          <el-table-column class="table_column_field" type="selection"/>
+          <el-table-column
+            label="商品平台"
+            show-overflow-tooltip>
+            <template slot-scope="scope">{{ appTypeDict[scope.row.appType] }}</template>
+          </el-table-column>
+          <el-table-column
+            prop="shopName"
+            label="店铺"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="title"
+            label="商品名称">
+          </el-table-column>
+          <el-table-column
+            prop="productType"
+            label="商品分类"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="expirationDate"
+            label="活动截止时间"
+            show-overflow-tooltip>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <div class="table_pagination block" ref="pagination">
+          <el-pagination
+            background
+            @size-change="search"
+            @current-change="search"
+            :current-page="page.curPage"
+            :page-sizes="page.sizes"
+            :page-size="page.size"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="page.totalSize">
+          </el-pagination>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import breadcrumb from "@/components/common/Breadcrumb"
 export default {
+  components: {
+    breadcrumb
+  },
   data() {
     return {
       tableHeight: 0,
@@ -97,60 +108,20 @@ export default {
         shopName: '',
         appType: ''
       },
-      productList: [],
-      productPlatformList: [
+      productList: [
         {
-          "type": 1,
-          "name": "天猫"
-        },
-        {
-          "type": 2,
-          "name": "淘宝"
-        },
-        {
-          "type": 3,
-          "name": "拼多多"
+          appType: '',
+          title: '',
+          shopName: '',
+          productType: '',
+          expirationDate: ''
         }
       ],
-      tableData: [{
-        date: '2016-05-03',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-02',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-04',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-01',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-08',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-06',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }, {
-        date: '2016-05-07',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
+      appTypeDict: {
+        1: '天猫',
+        2: '淘宝',
+        3: '拼多多'
       },
-      {
-        date: '2016-05-07',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      },
-      {
-        date: '2016-05-07',
-        name: '王小虎',
-        address: '上海市普陀区金沙江路 1518 弄'
-      }],
       multipleSelection: []
     }
   },
@@ -184,9 +155,16 @@ export default {
           this.page.curPage = res.data.page
           this.page.totalSize = res.data.totalSize
           this.productList = res.data.records
+          debugger
         }
-        debugger
       })
+    },
+    /**
+     * 页面跳转
+     * @param id
+     */
+    jumpPage(id) {
+      this.$router.push({path: '/product/edit', params: {id: id}})
     }
   },
   mounted () {
@@ -198,10 +176,12 @@ export default {
     let totalHeight = document.documentElement.clientHeight
     let contentPadding = 30
     let tableHeader = 48
+    let breadcrumb = 31
     let searchFormHeight = this.$refs.searchForm.offsetHeight + 20
     let buttomListHeight = this.$refs.buttonList.offsetHeight
     let paginationHeight = this.$refs.pagination.offsetHeight
-    this.tableHeight = totalHeight - searchFormHeight - buttomListHeight - paginationHeight - contentPadding - tableHeader
+    this.tableHeight = totalHeight - searchFormHeight - buttomListHeight - paginationHeight
+                       - contentPadding - tableHeader - breadcrumb
   }
 }
 </script>
