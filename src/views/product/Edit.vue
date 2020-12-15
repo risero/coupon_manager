@@ -41,7 +41,7 @@
               <el-input v-model="product.title" placeholder="请输入商品标题"></el-input>
             </el-form-item>
             <el-form-item label="商品链接">
-              <el-input v-model="product.link" placeholder="请输入店铺名称"></el-input>
+              <el-input v-model="product.productLink" placeholder="请输入店铺名称"></el-input>
             </el-form-item>
           </div>
           <div class="group_item">
@@ -61,7 +61,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="商品分类">
-              <el-select v-model="product.category" placeholder="请选择商品分类">
+              <el-select v-model="product.productCategory" placeholder="请选择商品分类">
                 <el-option label="手机数码" value="1"></el-option>
                 <el-option label="男装" value="2"></el-option>
                 <el-option label="女装" value="3"></el-option>
@@ -93,11 +93,28 @@
               </el-select>
             </el-form-item>
           </div>
+
+          <div class="group_item">
+            <el-form-item label="截止时间">
+              <el-date-picker
+                v-model="product.expirationDate"
+                type="datetime"
+                format="yyyy-MM-dd HH:mm:ss"
+                placeholder="选择日期时间">
+              </el-date-picker>
+            </el-form-item>
+
+            <el-form-item label="商品状态">
+              <el-select v-model="product.status" placeholder="商品状态">
+                <el-option :label="item.label" :value="item.value" v-for="(item) in productStatusList" :key="item.value"></el-option>
+              </el-select>
+            </el-form-item>
+          </div>
       </div>
     </el-form>
 
     <div class="floor">
-      <el-button class="form_save" type="primary">保存</el-button>
+      <el-button class="form_save" type="primary" @click="onSubmit">保存</el-button>
     </div>
   </div>
 </template>
@@ -105,6 +122,7 @@
 <script>
   import axios from 'axios'
   import breadcrumb from "@/components/common/Breadcrumb";
+  import DateUtils from '@/assets/js/util'
   export default {
     components: {
       breadcrumb
@@ -116,24 +134,56 @@
         tempImgUrl: '',
         product: {
           title: '',
-          link: '',
+          productLink: '',
           originalPrice: '',
           preferentialPrice: '',
           appType: '',
-          category: '',
+          productCategory: '',
           shopName: '',
           salesVolume: '',
           province: '',
           city: '',
-          mainProduct: "",
-          productImgs: []
+          mainImg: "",
+          productImgs: [],
+          expirationDate: '',
+          status: '0'
         },
+        productStatusList: [
+          {
+            label: '上架',
+            value: '0'
+          },
+          {
+            label: '下架',
+            value: '1'
+          },
+        ],
         dialogImageUrl: '',
         dialogVisible: false,
       }
     },
     methods: {
       onSubmit() {
+        let data = this.product
+        let expirationDate = null
+        if (data.expirationDate) {
+          expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
+        }
+        data = JSON.parse(JSON.stringify(this.product));
+        data.expirationDate = expirationDate
+        data.moreImg = this.product.productImgs.join()
+        this.$http.post("/product/edit", data).then((resp) => {
+          debugger
+          if (resp.status === 200) {
+            this.$message.success("保存成功")
+            this.$router.push({path: '/product/list'})
+          } else {
+            this.$message.error({
+              message: '保存失败',
+              duration: 8000000
+            })
+          }
+        })
         console.log('submit!');
       },
       handleRemove(file, fileList) {
@@ -151,16 +201,15 @@
        * 商品主图片上传成功处理的回调
        */
       handleMainProductImg(res, file) {
-        debugger
         if (res.status === 200) {
-          this.product.mainProduct = res.data
+          this.product.mainImg = res.data
         }
         this.tempImgUrl = URL.createObjectURL(file.raw);
       },
       handleProductMore(response, file, fileList) {
         this.dialogImageUrl = file.url;
-        for (let item in fileList) {
-          let resp = item.response
+        for (let i in fileList) {
+          let resp = fileList[i].response
           if (resp.status === 200) {
             this.product.productImgs.unshift(resp.data)
           }
@@ -343,9 +392,6 @@
       width: 90px;
       white-space: normal;
       text-align: left;
-      //padding-left: 10px;
-      //display: flex;
-      //justify-content: left;
     }
 
     .el-form-item__content {
@@ -377,11 +423,19 @@
     border-top: 1px solid #CCCCCC;
     width: 100%;
     display: block;
-    position: absolute;
+    position: fixed;
     bottom: 0;
+    background-color: #FFFFFF;
+    z-index: 1;
   }
 
   .form_save {
     padding: 12px 25px;
+    text-align: center;
+  }
+
+  /* 修改elementui message消息框为居中 */
+  /deep/ .el-message .el-message--error {
+    justify-content: center;
   }
 </style>

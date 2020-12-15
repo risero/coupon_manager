@@ -7,7 +7,9 @@ import 'element-ui/lib/index'
 import '@/assets/font/iconfont.css'
 import axios from 'axios'
 import Qs from 'qs'
+
 Vue.prototype.$http = axios
+
 /**
  * 对请求的数据做处理
  */

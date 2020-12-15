@@ -13,3 +13,8 @@ html, body, #app {
 #nprogress .spinner {
     z-index: 15031;
 }
+
+/* 修改elementui message消息框为居中 */
+/deep/ .el-message--error {
+    justify-content: center;
+}

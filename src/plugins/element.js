@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import { Button, Form, FormItem, Input, Container, Aside, Header, Footer, Main, Menu, MenuItem, Submenu
   ,MenuItemGroup, RadioGroup, RadioButton, Row, Col, Table, TableColumn, Option, Select, Pagination, Dialog
-  ,Upload, BreadcrumbItem, Breadcrumb, Message } from 'element-ui'
+  ,Upload, BreadcrumbItem, Breadcrumb, Message, DatePicker } from 'element-ui'
 
 Vue.prototype.$message = Message
 
@@ -38,5 +38,7 @@ Vue.use(Dialog)
 Vue.use(Upload)
 Vue.use(BreadcrumbItem)
 Vue.use(Breadcrumb)
+
+Vue.use(DatePicker)
 
 
