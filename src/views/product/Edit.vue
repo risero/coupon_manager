@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <breadcrumb breadcrumbs="商品管理,商品新增"></breadcrumb>
-    <el-form :inline="true" :model="product" class="product_form">
+    <el-form :inline="true" ref="productForm" :model="product" :rules="rules" class="product_form">
       <div class="content_left">
         <!-- 首页商品图片 -->
         <div class="main_img">
@@ -37,30 +37,30 @@
       <!-- 商品详细信息 -->
       <div class="content_right">
           <div class="row_form">
-            <el-form-item label="商品标题">
+            <el-form-item label="商品标题" prop="title">
               <el-input v-model="product.title" placeholder="请输入商品标题"></el-input>
             </el-form-item>
-            <el-form-item label="商品链接">
+            <el-form-item label="商品链接" prop="productLink">
               <el-input v-model="product.productLink" placeholder="请输入店铺名称"></el-input>
             </el-form-item>
           </div>
           <div class="group_item">
-            <el-form-item label="商品原价">
+            <el-form-item label="商品原价" prop="originalPrice">
               <el-input v-model="product.originalPrice" placeholder="请输入商品原价"></el-input>
             </el-form-item>
-            <el-form-item label="优惠卷价格">
+            <el-form-item label="优惠价格" prop="preferentialPrice">
               <el-input v-model="product.preferentialPrice" placeholder="请输入优惠卷价格"></el-input>
             </el-form-item>
           </div>
           <div class="group_item">
-            <el-form-item label="所属平台">
+            <el-form-item label="所属平台" prop="appType">
               <el-select v-model="product.appType" placeholder="请选择商品所属平台">
                 <el-option label="天猫" value="1"></el-option>
                 <el-option label="淘宝" value="2"></el-option>
                 <el-option label="拼多多" value="3"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="商品分类">
+            <el-form-item label="商品分类" prop="productCategory">
               <el-select v-model="product.productCategory" placeholder="请选择商品分类">
                 <el-option label="手机数码" value="1"></el-option>
                 <el-option label="男装" value="2"></el-option>
@@ -69,23 +69,23 @@
             </el-form-item>
           </div>
           <div class="group_item">
-            <el-form-item label="店铺名称">
+            <el-form-item label="店铺名称" prop="shopName">
               <el-input v-model="product.shopName" placeholder="请输入店铺名称"></el-input>
             </el-form-item>
-            <el-form-item label="销量">
+            <el-form-item label="销量" prop="salesVolume">
               <el-input v-model="product.salesVolume" placeholder="请输入店铺名称"></el-input>
             </el-form-item>
           </div>
 
           <div class="group_item">
-            <el-form-item label="发货省份">
+            <el-form-item label="发货省份" prop="province">
               <el-select v-model="product.province" placeholder="省">
                 <el-option label="天猫" value="1"></el-option>
                 <el-option label="淘宝" value="2"></el-option>
                 <el-option label="拼多多" value="3"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="发货城市">
+            <el-form-item label="发货城市" prop="city">
               <el-select v-model="product.city" placeholder="市">
                 <el-option label="天猫" value="1"></el-option>
                 <el-option label="淘宝" value="2"></el-option>
@@ -95,7 +95,7 @@
           </div>
 
           <div class="group_item">
-            <el-form-item label="截止时间">
+            <el-form-item label="截止时间" prop="expirationDate">
               <el-date-picker
                 v-model="product.expirationDate"
                 type="datetime"
@@ -104,7 +104,7 @@
               </el-date-picker>
             </el-form-item>
 
-            <el-form-item label="商品状态">
+            <el-form-item label="商品状态" prop="status">
               <el-select v-model="product.status" placeholder="商品状态">
                 <el-option :label="item.label" :value="item.value" v-for="(item) in productStatusList" :key="item.value"></el-option>
               </el-select>
@@ -148,6 +148,44 @@
           expirationDate: '',
           status: '0'
         },
+        rules: {
+          title: [
+            { required: true, message: '请输入商品标题', trigger: 'blur' }
+          ],
+          productLink: [
+            { required: true, message: '请输入商品链接', trigger: 'blur' }
+          ],
+          originalPrice: [
+            { required: true, message: '请输入商品原价', trigger: 'blur' }
+          ],
+          preferentialPrice: [
+            { required: true, message: '请输入商品优惠价格', trigger: 'blur' }
+          ],
+          appType: [
+            { required: true, message: '请选择所属平台', trigger: 'blur' }
+          ],
+          productCategory: [
+            { required: true, message: '请选择商品分类', trigger: 'blur' }
+          ],
+          shopName: [
+            { required: true, message: '请输入店铺名称', trigger: 'blur' }
+          ],
+          salesVolume: [
+            { required: true, message: '请输入商品销量', trigger: 'blur' }
+          ],
+          province: [
+            { required: true, message: '请选择发货省份', trigger: 'blur' }
+          ],
+          city: [
+            { required: true, message: '请选择发货城市', trigger: 'blur' }
+          ],
+          expirationDate: [
+            { required: true, message: '请输入活动截止时间', trigger: 'blur' }
+          ],
+          status: [
+            { required: true, message: '请输入商品状态', trigger: 'blur' }
+          ]
+        },
         productStatusList: [
           {
             label: '上架',
@@ -159,32 +197,44 @@
           },
         ],
         dialogImageUrl: '',
-        dialogVisible: false,
+        dialogVisible: false
       }
     },
     methods: {
       onSubmit() {
-        let data = this.product
-        let expirationDate = null
-        if (data.expirationDate) {
-          expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
-        }
-        data = JSON.parse(JSON.stringify(this.product));
-        data.expirationDate = expirationDate
-        data.moreImg = this.product.productImgs.join()
-        this.$http.post("/product/edit", data).then((resp) => {
-          debugger
-          if (resp.status === 200) {
-            this.$message.success("保存成功")
-            this.$router.push({path: '/product/list'})
-          } else {
-            this.$message.error({
-              message: '保存失败',
-              duration: 8000000
-            })
+        this.$refs.productForm.validate((valid) => {
+          // 保存前校验表单
+          if (!valid) return
+          if (!this.product.mainImg) {
+            this.$message.error("商品首页图片不能为空")
+            return
           }
-        })
-        console.log('submit!');
+          if (!this.product.productImgs) {
+            this.$message.error("商品其他不能为空")
+            return
+          }
+
+          // 保存
+          let data = this.product
+          let expirationDate = null
+          if (data.expirationDate) {
+            expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
+          }
+          data = JSON.parse(JSON.stringify(this.product));
+          data.expirationDate = expirationDate
+          data.moreImg = this.product.productImgs.join()
+          this.$http.post("/product/edit", data).then((resp) => {
+            if (resp.status === 200) {
+              this.$message.success("保存成功")
+              this.$router.push({path: '/product/list'})
+            } else {
+              this.$message.error({
+                message: '保存失败',
+                duration: 8000000
+              })
+            }
+          })
+        });
       },
       handleRemove(file, fileList) {
         debugger

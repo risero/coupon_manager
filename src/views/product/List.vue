@@ -41,6 +41,8 @@
                   ref="tableList"
                   :data="productList"
                   tooltip-effect="dark"
+                  @row-click="rowClick"
+                  @setCurrentRow="selectedRow"
                   @selection-change="handleSelectionChange"
                   :height="tableHeight">
           <el-table-column class="table_column_field" type="selection"/>
@@ -126,13 +128,9 @@ export default {
     }
   },
   methods: {
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach(row => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
+    selectedRow(row) {
+      if (row) {
+        this.$refs.tableList.setCurrentRow(row)
       }
     },
     handleSelectionChange(val) {
@@ -158,6 +156,12 @@ export default {
           debugger
         }
       })
+    },
+    rowClick(row, column) {
+      debugger
+      if (row) {
+        this.$refs.tableList.toggleRowSelection(row)
+      }
     },
     /**
      * 页面跳转
