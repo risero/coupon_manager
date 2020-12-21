@@ -18,11 +18,9 @@
         </div>
         <!-- 更多图片 -->
         <div class="more_img">
-          <el-upload
-            class="more_img_upload"
+          <el-upload class="more_img_upload"
             :action="uploadAction"
             list-type="picture-card"
-            :file-list="displayMoreImg"
             multiple
             :limit="imgMaxLimit"
             :on-success="handleProductMore"
@@ -40,10 +38,10 @@
       <div class="content_right">
           <div class="row_form">
             <el-form-item label="商品标题" prop="title">
-              <el-input v-model="product.title" class="title" placeholder="请输入商品标题"></el-input>
+              <el-input v-model="product.title" placeholder="请输入商品标题"></el-input>
             </el-form-item>
             <el-form-item label="商品链接" prop="productLink">
-              <el-input v-model="product.productLink" class="product_link" placeholder="请输入店铺名称"></el-input>
+              <el-input v-model="product.productLink" placeholder="请输入店铺名称"></el-input>
             </el-form-item>
           </div>
           <div class="group_item">
@@ -135,7 +133,6 @@
         uploadAction: axios.defaults.baseURL + "/common/upload",
         imgMaxLimit: 8,
         tempImgUrl: '',
-        displayMoreImg: [],
         product: {
           title: '',
           productLink: '',
@@ -221,7 +218,7 @@
           // 保存
           let data = this.product
           let expirationDate = null
-          if (!this.currentId && data.expirationDate) {
+          if (data.expirationDate) {
             expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
           }
           data = JSON.parse(JSON.stringify(this.product));
@@ -234,12 +231,14 @@
             } else {
               this.$message.error({
                 message: '保存失败',
+                duration: 8000000
               })
             }
           })
         });
       },
       handleRemove(file, fileList) {
+        debugger
         console.log(file, fileList);
       },
       /**
@@ -299,26 +298,7 @@
       this.currentId = this.$route.query.id
       // 编辑, 回显数据
       if (this.currentId) {
-        this.$http.post("/product/detailInfo", {id: this.currentId}).then((res) => {
-          if (res.status == 200) {
-            this.product = res.data
-            this.product.productImgs = []
-            let imgArr = []
-            if (res.data.imgs) {
-              imgArr = res.data.imgs.split(",")
-            }
-            // 第1张图片为主图片
-            if (imgArr.length > 0) {
-              this.tempImgUrl = imgArr[0]
-              this.product.mainImg = imgArr[0]
-            }
-            // 第1张图片之后为更多图片
-            for (let i = 0; i < imgArr.length; i++) {
-              this.product.productImgs.push(imgArr[i])
-              this.displayMoreImg.push({name: '', url: imgArr[i]})
-            }
-          }
-        })
+
       }
     }
   }
@@ -447,10 +427,6 @@
     width: 100%;
     height: 100%;
     margin-left: 40px;
-
-    /deep/ .product_link .el-input__inner, /deep/ .title .el-input__inner {
-      width: 100%;
-    }
 
     /* 表单分组 */
     .group_item {

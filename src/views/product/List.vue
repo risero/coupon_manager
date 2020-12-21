@@ -153,22 +153,28 @@ export default {
           this.page.curPage = res.data.page
           this.page.totalSize = res.data.totalSize
           this.productList = res.data.records
-          debugger
         }
       })
     },
-    rowClick(row, column) {
-      debugger
+    /**
+     * 点击当前行为选中状态
+     */
+    rowClick(row) {
       if (row) {
         this.$refs.tableList.toggleRowSelection(row)
       }
     },
     /**
      * 页面跳转
-     * @param id
      */
-    jumpPage(id) {
-      this.$router.push({path: '/product/edit', params: {id: id}})
+    jumpPage() {
+      let selected = this.multipleSelection
+      if (selected && selected.length > 1 || selected.length <= 0) {
+        this.$message.warning("请选择一行!")
+        return
+      }
+      let row = selected[0]
+      this.$router.push({path: '/product/edit', query: {id: row.id}})
     }
   },
   mounted () {

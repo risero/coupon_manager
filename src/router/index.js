@@ -23,7 +23,7 @@ const routes = [
       // 分类管理
       {
         path: '/category/list',
-        component: ()=> import('@/views/product/List')
+        component: ()=> import('@/views/category/List')
       },
       // 商品推荐
       {

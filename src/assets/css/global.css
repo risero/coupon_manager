@@ -18,3 +18,8 @@ html, body, #app {
 /deep/ .el-message__icon .el-icon-error {
     justify-content: center;
 }
+
+.el-form-item__content .el-input__inner {
+    height: 35px;
+    width: 190px;
+}
