@@ -219,7 +219,7 @@
           let data = this.product
           let expirationDate = null
           if (data.expirationDate) {
-            expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
+            expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:mm:ss", data.expirationDate)
           }
           data = JSON.parse(JSON.stringify(this.product));
           data.expirationDate = expirationDate
