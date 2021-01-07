@@ -5,11 +5,14 @@
 
     <div class="category_main">
       <!-- 左侧商品分类 tree -->
-      <div class="left_category" ref="categoryTree" :style="{width: tableHeight}">
+      <div class="left_category">
         <div class="category_title">商品分类</div>
         <el-tree
-          :props="categoryTree"
-          :load="loadNode"
+          ref="categoryTree"
+          :data="categoryTree"
+          :props="treeConfig"
+          show-checkbox
+          node-key="id"
           lazy>
         </el-tree>
       </div>
@@ -19,17 +22,13 @@
         <div ref="searchForm">
           <el-form :inline="true" class="demo-form-inline search_form">
             <el-form-item>
-              <el-input v-model="searchForm.title" placeholder="请输入商品名称"></el-input>
+              <el-input v-model="searchForm.title" placeholder="请输入分类名称"></el-input>
             </el-form-item>
-            <el-form-item>
-              <el-input v-model="searchForm.category" placeholder="请输入分类名称"></el-input>
-            </el-form-item>
-            <el-form-item label="商品平台:">
-              <el-select v-model="searchForm.appType" placeholder="请选择平台类型">
+            <el-form-item label="是否上架:">
+              <el-select v-model="searchForm.isShow" placeholder="请选择上架状态">
                 <el-option label="全部" value=""></el-option>
-                <el-option label="天猫" value="1"></el-option>
-                <el-option label="淘宝" value="2"></el-option>
-                <el-option label="拼多多" value="3"></el-option>
+                <el-option label="上架" value="0"></el-option>
+                <el-option label="下架" value="1"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -42,15 +41,15 @@
         <div class="list_content">
           <div class="button_list" ref="buttonList">
             <!-- 按钮 -->
-            <el-button type="success" class="el-icon-plus" @click="jumpPage">新增</el-button>
-            <el-button type="primary" class="el-icon-edit" @click="jumpPage">编辑</el-button>
+            <el-button type="success" class="el-icon-plus" @click="jumpPage('save')">新增</el-button>
+            <el-button type="primary" class="el-icon-edit" @click="jumpPage('edit')">编辑</el-button>
             <el-button type="danger" class="el-icon-delete">删除</el-button>
           </div>
 
           <!-- 表格 -->
           <el-table class="table_list"
                     ref="tableList"
-                    :data="productList"
+                    :data="categoryList"
                     tooltip-effect="dark"
                     @row-click="rowClick"
                     @setCurrentRow="selectedRow"
@@ -58,27 +57,18 @@
                     :height="tableHeight">
             <el-table-column class="table_column_field" type="selection"/>
             <el-table-column
-              label="商品平台"
-              show-overflow-tooltip>
-              <template slot-scope="scope">{{ appTypeDict[scope.row.appType] }}</template>
-            </el-table-column>
-            <el-table-column
-              prop="shopName"
-              label="店铺"
+              prop="name"
+              label="分类名称"
               show-overflow-tooltip>
             </el-table-column>
             <el-table-column
-              prop="title"
-              label="商品名称">
-            </el-table-column>
-            <el-table-column
-              prop="productType"
-              label="商品分类"
+              label="是否上架"
               show-overflow-tooltip>
+              <template slot-scope="scope">{{ showDict[scope.row.isShow] }}</template>
             </el-table-column>
             <el-table-column
-              prop="expirationDate"
-              label="活动截止时间"
+              prop="createTime"
+              label="创建时间"
               show-overflow-tooltip>
             </el-table-column>
           </el-table>
@@ -108,19 +98,27 @@ export default {
   components: {
     breadcrumb
   },
+  directives:{
+    clickNode:{
+      inserted(el,binging){
+        debugger
+        console.log("自动触发事件")
+        el.click()
+      }
+    }
+  },
   data() {
     return {
       tableHeight: 0,
       page: {
         curPage: 1, // 当前页
         sizes: [10, 20, 50, 100], // 默认可查询分页数
-        totalSize: 100, // 总记录数
-        size: 10, // 默认显示为10条
+        totalSize: 0, // 总记录数
+        size: 20, // 默认显示为10条
       },
       searchForm: {
-        title: '',
-        category: '',
-        appType: ''
+        name: '',
+        isShow: '',
       },
       productList: [
         {
@@ -131,18 +129,31 @@ export default {
           expirationDate: ''
         }
       ],
-      appTypeDict: {
-        1: '天猫',
-        2: '淘宝',
-        3: '拼多多'
+      showDict: {
+        0: '上架',
+        1: '下架',
       },
       multipleSelection: [],
-      categoryTree: {
+      treeConfig: {
         label: 'name',
-        children: 'zones',
-        isLeaf: 'leaf'
-      }
+      },
+      categoryTree: [],
+      flgExpandAll: true, // 是否展开tree的所有节点
+      categoryList: [],
+      curLevel: 0, // 当前层级
+      parentId: "", // 父节点id
+      checkedNode: {}, // 选中的节点数据
     }
+  },
+  created() {
+    /*this.$http.post("/category/categoryTree", data).then((res) => {
+      if (res.status == 200) {
+        this.page.curPage = res.data.page
+        this.page.totalSize = res.data.total
+        this.categoryList = res.data.records
+        this.page.curPage = res.data.current
+      }
+    })*/
   },
   methods: {
     selectedRow(row) {
@@ -153,25 +164,33 @@ export default {
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
-    // 分页查询
+    /**
+     * 分页查询
+     */
     search() {
       let pageObj = this.page // 获取当前分页数据
       let searchForm = this.searchForm // 查询搜索参数
+      let _this = this
       let data = {
         page: pageObj.curPage,
         psize: pageObj.size,
         productName: searchForm.title,
         appType: searchForm.appType,
-        shopName: searchForm.shopName
+        shopName: searchForm.shopName,
+        level: _this.curLevel,
+        parentId: _this.parentId
       }
-      this.$http.post("/product/list", data).then((res) => {
-        if (res.status == 200) {
-          let records = res.data.records
-          this.page.curPage = res.data.page
-          this.page.totalSize = res.data.totalSize
-          this.productList = res.data.records
-        }
-      })
+      // 如果为根节点则不获取列表
+      if (_this.curLevel > 0) {
+        this.$http.post("/category/list", data).then((res) => {
+          if (res.status == 200) {
+            this.page.curPage = res.data.page
+            this.page.totalSize = res.data.total
+            this.categoryList = res.data.records
+            this.page.curPage = res.data.current
+          }
+        })
+      }
     },
     /**
      * 点击当前行为选中状态
@@ -184,15 +203,30 @@ export default {
     /**
      * 页面跳转
      */
-    jumpPage() {
+    jumpPage(type) {
+      debugger
       let selected = this.multipleSelection
-      if (selected && selected.length > 1 || selected.length <= 0) {
-        this.$message.warning("请选择一行!")
-        return
+      let query = {}
+      if ('save' === type) {
+        if (!this.checkedNode.data) {
+          this.$message.warning("请选择分类!")
+          return
+        }
+        query.parentNode = this.checkedNode.data
+      } else if ('edit' === type) {
+        if (selected && selected.length > 1 || selected.length <= 0) {
+          this.$message.warning("请选择一行!")
+          return
+        }
+        query.id = row.id
       }
       let row = selected[0]
-      debugger
-      this.$router.push({path: '/product/edit', query: {id: row.id}})
+      this.$router.push(
+        {
+          path: '/category/edit',
+          query: query
+        }
+      )
     },
     /**
      * 左侧商品管理懒加载tree
@@ -203,22 +237,72 @@ export default {
      */
     loadNode(node, resolve) {
       if (node.level === 0) {
-        return resolve([{ name: 'region' }]);
+        // 获取当前0节点和所有1级节点的数据
+        this.$http.post('/category/getChildredCategory', {level: node.level}).then((resp) => {
+          if (resp.status == 200) {
+            let nodes = resp.data
+            for (let key in nodes) {
+              if (nodes[key].parentId) {
+                nodes[key].nodeId = nodes[key].id
+              } else {
+                nodes[key].parentId = nodes[key].id
+                nodes[key].nodeId = nodes[key].id
+              }
+            }
+            setTimeout(() => {
+              this.categoryTree = nodes
+              // 当前节点为被选中状态
+              this.checkedNode = node
+              return resolve(this.categoryTree);
+            }, 300);
+          }
+        }).catch((err) => {
+          console.log(err)
+        })
       }
-      if (node.level > 1) return resolve([]);
-      setTimeout(() => {
-        const data = [{
-          name: 'leaf',
-          leaf: true
-        }, {
-          name: 'zone'
-        }];
-        resolve(data);
-      }, 500);
+
+      if (node.level > 0) {
+        this.handleNodeClick(node, resolve)
+      }
+    },
+    handleNodeClick(node, resolve) {
+      let _this = this
+      this.$http.post('/category/getChildredCategory', {level: node.level, parentId: node.data.nodeId}).then((resp) => {
+        if (resp.status == 200) {
+          let nodes = resp.data
+          for (let key in nodes) {
+            if (nodes[key].parentId) {
+              nodes[key].leaf = true
+              nodes[key].nodeId = nodes[key].id
+              delete nodes[key].id
+            }
+          }
+          setTimeout(() => {
+            // 获取分类列表数据
+            _this.parentId = node.data.nodeId
+            _this.curLevel = node.level
+            _this.getCategoryList(_this.curLevel, _this.parentId);
+            // 当前节点为被选中状态
+            this.checkedNode = node
+            return resolve(nodes)
+          }, 300);
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    /**
+     * 获取分类列表数据
+     *
+     * @param level
+     * @param parentId
+     */
+    getCategoryList(level, parentId) {
+      this.search(level, parentId)
     }
   },
   mounted () {
-    // 查询商品信息
+    // 查询分类信息
     this.search()
   },
   updated () {
@@ -232,8 +316,6 @@ export default {
     let paginationHeight = this.$refs.pagination.offsetHeight
     this.tableHeight = totalHeight - searchFormHeight - buttomListHeight - paginationHeight
                        - contentPadding - tableHeader - breadcrumb
-    // debugger
-    // this.$refs.categoryTree.offsetHeight = this.tableHeight
   }
 }
 </script>
@@ -248,7 +330,7 @@ export default {
   .category_main {
     display: flex;
     justify-content: space-between;
-    height: 100%;
+    height: 500px;
   }
 
   /* 左侧分类tree */
@@ -283,7 +365,7 @@ export default {
 
   /* 搜索框 */
   .search_form {
-    width: 100%;
+    width: auto;
     border: 1px #F3F3F3 solid;
     border-radius: 5px;
     display: flex;

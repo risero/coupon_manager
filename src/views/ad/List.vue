@@ -1,20 +1,17 @@
 <template>
   <div class="container">
     <!-- 面包屑路由 -->
-    <breadcrumb ref="breadcrumb" breadcrumbs="商品管理,商品列表"></breadcrumb>
+    <breadcrumb ref="breadcrumb" breadcrumbs="广告管理,广告列表"></breadcrumb>
 
     <!-- 商品列表页 -->
     <div class="main_content" ref="mainContent" :model="searchForm">
       <div class="main_content" ref="searchForm">
         <el-form :inline="true" class="demo-form-inline search_form">
           <el-form-item>
-            <el-input v-model="searchForm.title" placeholder="请输入商品名称"></el-input>
+            <el-input v-model="searchForm.title" placeholder="广告名称"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-input v-model="searchForm.shopName" placeholder="请输入店铺名称"></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-select v-model="searchForm.appType" placeholder="请选择平台类型">
+            <el-select v-model="searchForm.appType" placeholder="广告类型">
               <el-option label="全部" value=""></el-option>
               <el-option label="天猫" value="1"></el-option>
               <el-option label="淘宝" value="2"></el-option>
@@ -47,27 +44,33 @@
                   :height="tableHeight">
           <el-table-column class="table_column_field" type="selection"/>
           <el-table-column
-            label="商品平台"
+            label="推荐顺序"
             show-overflow-tooltip>
             <template slot-scope="scope">{{ appTypeDict[scope.row.appType] }}</template>
           </el-table-column>
           <el-table-column
-            prop="shopName"
-            label="店铺"
+            label="广告名称"
             show-overflow-tooltip>
-          </el-table-column>
-          <el-table-column
-            prop="title"
-            label="商品名称">
+            <template slot-scope="scope">{{ appTypeDict[scope.row.appType] }}</template>
           </el-table-column>
           <el-table-column
             prop="productType"
-            label="商品分类"
+            label="广告类型"
             show-overflow-tooltip>
           </el-table-column>
           <el-table-column
             prop="expirationDate"
-            label="活动截止时间"
+            label="跳转链接"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="expirationDate"
+            label="广告状态"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="expirationDate"
+            label="创建时间"
             show-overflow-tooltip>
           </el-table-column>
         </el-table>

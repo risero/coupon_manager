@@ -20,10 +20,15 @@ const routes = [
         path: '/product/edit',
         component: ()=> import('@/views/product/Edit')
       },
-      // 分类管理
+      // 分类列表
       {
         path: '/category/list',
         component: ()=> import('@/views/category/List')
+      },
+      // 分类列表
+      {
+        path: '/category/edit',
+        component: ()=> import('@/views/category/Edit')
       },
       // 商品推荐
       {
@@ -33,7 +38,7 @@ const routes = [
       // 广告管理
       {
         path: '/banner/list',
-        component: ()=> import('@/views/product/List')
+        component: ()=> import('@/views/ad/List')
       }
     ]
   },
