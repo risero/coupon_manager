@@ -16,8 +16,8 @@ Vue.prototype.$http = axios
 Vue.prototype.$http.interceptors.request.use(function (config) {
   if (config.data) {
     config.data = Qs.stringify(config.data)
-    return config
   }
+  return config
 })
 
 /**

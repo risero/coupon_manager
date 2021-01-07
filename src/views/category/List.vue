@@ -11,9 +11,7 @@
           ref="categoryTree"
           :data="categoryTree"
           :props="treeConfig"
-          show-checkbox
-          node-key="id"
-          lazy>
+          default-expand-all>
         </el-tree>
       </div>
 
@@ -136,6 +134,7 @@ export default {
       multipleSelection: [],
       treeConfig: {
         label: 'name',
+        children: 'children'
       },
       categoryTree: [],
       flgExpandAll: true, // 是否展开tree的所有节点
@@ -145,17 +144,12 @@ export default {
       checkedNode: {}, // 选中的节点数据
     }
   },
-  created() {
-    /*this.$http.post("/category/categoryTree", data).then((res) => {
-      if (res.status == 200) {
-        this.page.curPage = res.data.page
-        this.page.totalSize = res.data.total
-        this.categoryList = res.data.records
-        this.page.curPage = res.data.current
-      }
-    })*/
-  },
   methods: {
+    setTreeNode(nodes) {
+      for (let node in nodes) {
+
+      }
+    },
     selectedRow(row) {
       if (row) {
         this.$refs.tableList.setCurrentRow(row)
@@ -302,6 +296,11 @@ export default {
     }
   },
   mounted () {
+    this.$http.post("/category/categoryTree").then((res) => {
+      if (res.status == 200) {
+        this.categoryTree = res.data
+      }
+    })
     // 查询分类信息
     this.search()
   },
