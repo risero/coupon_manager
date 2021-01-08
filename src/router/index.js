@@ -25,11 +25,6 @@ const routes = [
         path: '/category/list',
         component: ()=> import('@/views/category/List')
       },
-      // 分类列表
-      {
-        path: '/category/edit',
-        component: ()=> import('@/views/category/Edit')
-      },
       // 商品推荐
       {
         path: '/recommend/list',

@@ -11,6 +11,8 @@
           ref="categoryTree"
           :data="categoryTree"
           :props="treeConfig"
+          @node-click="nodeClick"
+          show-checkbox
           default-expand-all>
         </el-tree>
       </div>
@@ -20,7 +22,7 @@
         <div ref="searchForm">
           <el-form :inline="true" class="demo-form-inline search_form">
             <el-form-item>
-              <el-input v-model="searchForm.title" placeholder="请输入分类名称"></el-input>
+              <el-input v-model="searchForm.name" placeholder="请输入分类名称"></el-input>
             </el-form-item>
             <el-form-item label="是否上架:">
               <el-select v-model="searchForm.isShow" placeholder="请选择上架状态">
@@ -39,9 +41,9 @@
         <div class="list_content">
           <div class="button_list" ref="buttonList">
             <!-- 按钮 -->
-            <el-button type="success" class="el-icon-plus" @click="jumpPage('save')">新增</el-button>
-            <el-button type="primary" class="el-icon-edit" @click="jumpPage('edit')">编辑</el-button>
-            <el-button type="danger" class="el-icon-delete">删除</el-button>
+            <el-button type="success" class="el-icon-plus" @click="editDialog('add')">新增</el-button>
+            <el-button type="primary" class="el-icon-edit" @click="editDialog('edit')">编辑</el-button>
+            <el-button type="danger" class="el-icon-delete" @click="remove">删除</el-button>
           </div>
 
           <!-- 表格 -->
@@ -55,6 +57,11 @@
                     :height="tableHeight">
             <el-table-column class="table_column_field" type="selection"/>
             <el-table-column
+              prop="fullName"
+              label="分类全称"
+              show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column
               prop="name"
               label="分类名称"
               show-overflow-tooltip>
@@ -63,6 +70,11 @@
               label="是否上架"
               show-overflow-tooltip>
               <template slot-scope="scope">{{ showDict[scope.row.isShow] }}</template>
+            </el-table-column>
+            <el-table-column
+              prop="sequence"
+              label="上架顺序"
+              show-overflow-tooltip>
             </el-table-column>
             <el-table-column
               prop="createTime"
@@ -86,8 +98,52 @@
           </div>
         </div>
       </div>
-      </div>
     </div>
+
+    <!-- 分类保存内容弹出框 -->
+    <el-dialog
+      title="商品分类编辑表单"
+      :visible.sync="showCategoryForm"
+      center
+      width="50%">
+      <el-form class="category_form" :model="category">
+        <el-form-item label="所在分类" prop="title" :label-width="formLabelWidth">
+          <el-input v-model="category.fullName" placeholder="parent" :disabled="true"></el-input>
+          <el-input v-show="false" v-model="category.parentId"></el-input>
+        </el-form-item>
+        <el-form-item label="分类名称" prop="productLink" :label-width="formLabelWidth">
+          <el-input v-model="category.name" placeholder="请输入分类名称"></el-input>
+        </el-form-item>
+        <el-form-item label="是否上架" prop="appType" :label-width="formLabelWidth">
+          <el-select v-model="category.isShow" placeholder="请选择需要上架的分类">
+            <el-option v-for="item in isShowList" :label="item.label" :value="item.value"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上架顺序" prop="originalPrice" :label-width="formLabelWidth">
+          <el-input v-model="category.sequence" placeholder="请填写上架顺序"></el-input>
+        </el-form-item>
+      </el-form>
+
+      <!-- 保存按钮 -->
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="saveCategory">保存</el-button>
+        <el-button @click="showCategoryForm=false">取 消</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 删除确认弹出框 -->
+    <el-dialog
+      title="提示"
+      :visible.sync="centerDialogVisible"
+      width="30%"
+      center>
+      <span>需要注意的是内容是默认不居中的</span>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="centerDialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="centerDialogVisible = false">确 定</el-button>
+  </span>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
@@ -118,13 +174,21 @@ export default {
         name: '',
         isShow: '',
       },
-      productList: [
+      category: {
+        name: "",
+        parentId: "",
+        isShow: "1",
+        sequence: "",
+        fullName: ""
+      },
+      isShowList: [
         {
-          appType: '',
-          title: '',
-          shopName: '',
-          productType: '',
-          expirationDate: ''
+          label: '上架',
+          value: 0
+        },
+        {
+          label: '下架',
+          value: 1
         }
       ],
       showDict: {
@@ -142,6 +206,18 @@ export default {
       curLevel: 0, // 当前层级
       parentId: "", // 父节点id
       checkedNode: {}, // 选中的节点数据
+      form: {
+        name: '',
+        region: '',
+        date1: '',
+        date2: '',
+        delivery: false,
+        type: [],
+        resource: '',
+        desc: ''
+      },
+      formLabelWidth: '120px',
+      showCategoryForm: false,
     }
   },
   methods: {
@@ -168,23 +244,17 @@ export default {
       let data = {
         page: pageObj.curPage,
         psize: pageObj.size,
-        productName: searchForm.title,
-        appType: searchForm.appType,
-        shopName: searchForm.shopName,
-        level: _this.curLevel,
-        parentId: _this.parentId
+        name: searchForm.name,
+        isShow: searchForm.isShow,
       }
-      // 如果为根节点则不获取列表
-      if (_this.curLevel > 0) {
-        this.$http.post("/category/list", data).then((res) => {
-          if (res.status == 200) {
-            this.page.curPage = res.data.page
-            this.page.totalSize = res.data.total
-            this.categoryList = res.data.records
-            this.page.curPage = res.data.current
-          }
-        })
-      }
+      this.$http.post("/category/list", data).then((res) => {
+        if (res.status == 200) {
+          this.page.curPage = res.data.page
+          this.page.totalSize = res.data.total
+          this.categoryList = res.data.records
+          this.page.curPage = res.data.current
+        }
+      })
     },
     /**
      * 点击当前行为选中状态
@@ -195,97 +265,6 @@ export default {
       }
     },
     /**
-     * 页面跳转
-     */
-    jumpPage(type) {
-      debugger
-      let selected = this.multipleSelection
-      let query = {}
-      if ('save' === type) {
-        if (!this.checkedNode.data) {
-          this.$message.warning("请选择分类!")
-          return
-        }
-        query.parentNode = this.checkedNode.data
-      } else if ('edit' === type) {
-        if (selected && selected.length > 1 || selected.length <= 0) {
-          this.$message.warning("请选择一行!")
-          return
-        }
-        query.id = row.id
-      }
-      let row = selected[0]
-      this.$router.push(
-        {
-          path: '/category/edit',
-          query: query
-        }
-      )
-    },
-    /**
-     * 左侧商品管理懒加载tree
-     *
-     * @param node
-     * @param resolve
-     * @returns {*}
-     */
-    loadNode(node, resolve) {
-      if (node.level === 0) {
-        // 获取当前0节点和所有1级节点的数据
-        this.$http.post('/category/getChildredCategory', {level: node.level}).then((resp) => {
-          if (resp.status == 200) {
-            let nodes = resp.data
-            for (let key in nodes) {
-              if (nodes[key].parentId) {
-                nodes[key].nodeId = nodes[key].id
-              } else {
-                nodes[key].parentId = nodes[key].id
-                nodes[key].nodeId = nodes[key].id
-              }
-            }
-            setTimeout(() => {
-              this.categoryTree = nodes
-              // 当前节点为被选中状态
-              this.checkedNode = node
-              return resolve(this.categoryTree);
-            }, 300);
-          }
-        }).catch((err) => {
-          console.log(err)
-        })
-      }
-
-      if (node.level > 0) {
-        this.handleNodeClick(node, resolve)
-      }
-    },
-    handleNodeClick(node, resolve) {
-      let _this = this
-      this.$http.post('/category/getChildredCategory', {level: node.level, parentId: node.data.nodeId}).then((resp) => {
-        if (resp.status == 200) {
-          let nodes = resp.data
-          for (let key in nodes) {
-            if (nodes[key].parentId) {
-              nodes[key].leaf = true
-              nodes[key].nodeId = nodes[key].id
-              delete nodes[key].id
-            }
-          }
-          setTimeout(() => {
-            // 获取分类列表数据
-            _this.parentId = node.data.nodeId
-            _this.curLevel = node.level
-            _this.getCategoryList(_this.curLevel, _this.parentId);
-            // 当前节点为被选中状态
-            this.checkedNode = node
-            return resolve(nodes)
-          }, 300);
-        }
-      }).catch((err) => {
-        console.log(err)
-      })
-    },
-    /**
      * 获取分类列表数据
      *
      * @param level
@@ -293,14 +272,105 @@ export default {
      */
     getCategoryList(level, parentId) {
       this.search(level, parentId)
+    },
+    nodeClick(data) {
+      if (data.id) {
+        this.checkedNode = data
+      }
+    },
+    /**
+     * 显示表单
+     */
+    editDialog(type) {
+      // 选择
+      if ('add' === type) {
+        if (this.checkedNode.id) {
+          // 设置表单福父节点信息
+          this.category = this.checkedNode
+          this.category.parentId = this.checkedNode.nodeId
+          this.category.fullName = this.checkedNode.fullName
+          this.showCategoryForm=true
+          return
+        }
+        this.$message.error("请选择节点后添加")
+      } else if ('edit' === type) {
+        let selected = this.multipleSelection
+        if (selected && selected.length > 1 || selected.length <= 0) {
+          this.$message.warning("请选择一行!")
+          return
+        }
+        let selectedNode = selected[0]
+        this.category = selectedNode
+        this.showCategoryForm=true
+      }
+    },
+    /**
+     * 保存节点信息
+     */
+    saveCategory() {
+      if (!this.category.parentId) {
+        this.$message.error("操作有误，没有父节点数据")
+      }
+      let data = {
+        parentId: this.category.parentId,
+        name: this.category.name,
+        isShow: this.category.isShow,
+        sequence: this.category.sequence,
+      }
+      data = {
+        id: this.category.id,
+        parentId: this.category.parentId,
+        name: this.category.name,
+        isShow: this.category.isShow,
+        sequence: this.category.sequence,
+      }
+      this.$http.post("/category/edit", data).then((resp) => {
+        this.$message.success("保存成功")
+        this.showCategoryForm = false
+        this.loadCategoryTree()
+        this.search()
+      })
+    },
+    /**
+     * 加载商品分类数结构
+     */
+    loadCategoryTree() {
+      this.$http.post("/category/categoryTree").then((res) => {
+        if (res.status == 200) {
+          this.categoryTree = res.data
+        }
+      })
+    },
+    /**
+     * 删除节点
+     */
+    remove() {
+      let selected = this.multipleSelection
+      if (selected && selected.length > 1 || selected.length <= 0) {
+        this.$message.warning("请选择一行!")
+        return
+      }
+      // 批量删除
+      let ids = []
+      for (let key in selected) {
+        if (selected[key].id) {
+          ids.push(selected[key].id)
+        }
+      }
+      this.$http.post('/category/delete', {ids: ids.join(",")}).then((resp => {
+        debugger
+        if (resp.status == 200) {
+          this.$message.success("删除成功")
+          this.search()
+          this.loadCategoryTree()
+        }
+      })).catch((err) => {
+        this.$message.error("操作失败!")
+      })
     }
   },
   mounted () {
-    this.$http.post("/category/categoryTree").then((res) => {
-      if (res.status == 200) {
-        this.categoryTree = res.data
-      }
-    })
+    this.loadCategoryTree()
     // 查询分类信息
     this.search()
   },
@@ -408,6 +478,27 @@ export default {
 
     .el-pagination {
       font-weight: 400;
+    }
+  }
+
+  /* 分类保存表单 */
+  .category_form {
+    .el-form-item {
+      padding: 15px 0;
+    }
+
+    /deep/ .el-input__inner {
+      width: 80%;
+      display: flex;
+      justify-content: left;
+    }
+
+    /deep/ .el-select .el-input__inner {
+      width: 100%;
+    }
+
+    /deep/ .el-dialog--center .el-dialog__body {
+      padding: 0 25px 30px;
     }
   }
 </style>
