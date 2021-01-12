@@ -28,8 +28,8 @@
       <div class="list_content">
         <div class="button_list" ref="buttonList">
           <!-- 按钮 -->
-          <el-button type="success" class="el-icon-plus" @click="jumpPage">新增</el-button>
-          <el-button type="primary" class="el-icon-edit" @click="jumpPage">编辑</el-button>
+          <el-button type="success" class="el-icon-plus" @click="jumpPage('add')">新增</el-button>
+          <el-button type="primary" class="el-icon-edit" @click="jumpPage('edit')">编辑</el-button>
           <el-button type="danger" class="el-icon-delete">删除</el-button>
         </div>
 

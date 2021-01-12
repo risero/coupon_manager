@@ -57,17 +57,18 @@
           <div class="group_item">
             <el-form-item label="所属平台" prop="appType">
               <el-select v-model="product.appType" placeholder="请选择商品所属平台">
-                <el-option label="天猫" value="1"></el-option>
-                <el-option label="淘宝" value="2"></el-option>
-                <el-option label="拼多多" value="3"></el-option>
+                <el-option v-for="item in appTypeList" :label="item.name" :value="item.value"/>
               </el-select>
             </el-form-item>
-            <el-form-item label="商品分类" prop="productCategory">
-              <el-select v-model="product.productCategory" placeholder="请选择商品分类">
-                <el-option label="手机数码" value="1"></el-option>
-                <el-option label="男装" value="2"></el-option>
-                <el-option label="女装" value="3"></el-option>
-              </el-select>
+
+            <el-form-item label="商品分类" prop="cid">
+              <el-cascader
+                v-model="product.cid"
+                :options="options"
+                filterable
+                :props="categorySelectProps"
+                @change="handleChange">
+              </el-cascader>
             </el-form-item>
           </div>
           <div class="group_item">
@@ -80,18 +81,26 @@
           </div>
 
           <div class="group_item">
-            <el-form-item label="发货省份" prop="province">
-              <el-select v-model="product.province" placeholder="省">
-                <el-option label="天猫" value="1"></el-option>
-                <el-option label="淘宝" value="2"></el-option>
-                <el-option label="拼多多" value="3"></el-option>
+            <el-form-item label="首页推荐" prop="isRecommend">
+              <el-select v-model="product.isRecommend" placeholder="选择是否为首页推荐">
+                <el-option v-for="item in isRecommendList" :label="item.name" :value="item.value"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="发货城市" prop="city">
-              <el-select v-model="product.city" placeholder="市">
-                <el-option label="天猫" value="1"></el-option>
-                <el-option label="淘宝" value="2"></el-option>
-                <el-option label="拼多多" value="3"></el-option>
+
+            <el-form-item label="推荐顺序" prop="sequence">
+              <el-input v-model="product.sequence" placeholder="请设置推荐顺序"></el-input>
+            </el-form-item>
+          </div>
+
+          <div class="group_item">
+            <el-form-item label="发货省份" prop="provinceId">
+              <el-select v-model="product.provinceId" @change="getCity" placeholder="请选择发货省份">
+                <el-option v-for="item in provinceList" :label="item.name" :value="item.id"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="发货城市" prop="cityId">
+              <el-select v-model="product.cityId" @change="getCity" placeholder="请选择发货城市">
+                <el-option v-for="item in cityList" :label="item.name" :value="item.id"></el-option>
               </el-select>
             </el-form-item>
           </div>
@@ -124,7 +133,7 @@
 <script>
   import axios from 'axios'
   import breadcrumb from "@/components/common/Breadcrumb";
-  import DateUtils from '@/assets/js/util'
+  import util from '@/assets/js/util'
   export default {
     components: {
       breadcrumb
@@ -142,16 +151,50 @@
           originalPrice: '',
           preferentialPrice: '',
           appType: '',
-          productCategory: '',
+          cid: '',
           shopName: '',
           salesVolume: '',
-          province: '',
-          city: '',
+          provinceId: '',
+          cityId: '',
           mainImg: "",
           productImgs: [],
           expirationDate: '',
-          status: '0'
+          status: '0',
+          isRecommend: 1,
+          sequence: ''
         },
+        isRecommendList: [
+          {
+            name: "是",
+            value: 0
+          },
+          {
+            name: "否",
+            value: 1
+          }
+        ],
+        appTypeList: [
+          {
+            name: '天猫',
+            value: 1
+          }, {
+            name: '淘宝',
+            value: 2
+          }, {
+            name: '拼多多',
+            value: 3
+          }
+        ],
+        cityList: [],
+        provinceList: [],
+        cityDict: {},
+        provinceDict: {},
+        categorySelectProps: {
+          value: 'id',
+          label: 'name',
+          checkStrictly: true,
+        },
+        options: [],
         rules: {
           title: [
             { required: true, message: '请输入商品标题', trigger: 'blur' }
@@ -165,10 +208,10 @@
           preferentialPrice: [
             { required: true, message: '请输入商品优惠价格', trigger: 'blur' }
           ],
-          appType: [
+          cid: [
             { required: true, message: '请选择所属平台', trigger: 'blur' }
           ],
-          productCategory: [
+          appType: [
             { required: true, message: '请选择商品分类', trigger: 'blur' }
           ],
           shopName: [
@@ -177,10 +220,10 @@
           salesVolume: [
             { required: true, message: '请输入商品销量', trigger: 'blur' }
           ],
-          province: [
+          provinceId: [
             { required: true, message: '请选择发货省份', trigger: 'blur' }
           ],
-          city: [
+          cityId: [
             { required: true, message: '请选择发货城市', trigger: 'blur' }
           ],
           expirationDate: [
@@ -188,16 +231,19 @@
           ],
           status: [
             { required: true, message: '请输入商品状态', trigger: 'blur' }
+          ],
+          isRecommend: [
+            { required: true, message: '是否为首页推荐商品', trigger: 'blur' }
           ]
         },
         productStatusList: [
           {
             label: '上架',
-            value: '0'
+            value: "0"
           },
           {
             label: '下架',
-            value: '1'
+            value: "1"
           },
         ],
         dialogImageUrl: '',
@@ -205,6 +251,12 @@
       }
     },
     methods: {
+      /**
+       * 级联下拉框改变回调
+       */
+      handleChange(value) {
+        console.log(value);
+      },
       onSubmit() {
         this.$refs.productForm.validate((valid) => {
           // 保存前校验表单
@@ -220,13 +272,18 @@
 
           // 保存
           let data = this.product
+          if (this.product.cid && this.product.cid.length > 0) {
+            data.cid = this.product.cid[this.product.cid.length - 1]
+          }
           let expirationDate = null
           if (!this.currentId && data.expirationDate) {
-            expirationDate = DateUtils.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
+            expirationDate = util.dateFormat("yyyy-MM-dd HH:ss:mm", data.expirationDate)
           }
           data = JSON.parse(JSON.stringify(this.product));
           data.expirationDate = expirationDate
           data.moreImg = this.product.productImgs.join()
+          data.city = this.cityDict[this.product.cityId]
+          data.province = this.provinceDict[this.product.provinceId]
           this.$http.post("/product/edit", data).then((resp) => {
             if (resp.status === 200) {
               this.$message.success("保存成功")
@@ -293,11 +350,64 @@
        */
       removeUploadImg(key) {
         this.$http.post('/common/removeFile', {key: key})
+      },
+      /**
+       * 加载商品分类下拉框数据
+       */
+      loadCategory() {
+        this.$http.post("/category/categoryTree").then((res) => {
+          if (res.status == 200) {
+            this.options = res.data
+            util.filterTreeNotNode(this.options)
+          }
+        })
+      },
+      /**
+       * 加载省份列表
+       */
+      getProvince() {
+        this.$http.post('/commonArea/getProvinceList').then((res) => {
+          if (res.status == 200) {
+            this.provinceList = res.data
+            for (let i in this.provinceList) {
+              let item = this.provinceList[i]
+              this.provinceDict[item.id] = item.name
+            }
+            this.product.provinceId = this.provinceList[0].id
+            this.getCity()
+          }
+        })
+      },
+      /**
+       * 通过省份id加载城市列表
+       */
+      getCity() {
+        let data = {
+          provinceId: this.product.provinceId
+        }
+        this.$http.post('/commonArea/getCityList', data).then((res) => {
+          if (res.status == 200) {
+            this.cityList = res.data
+            this.product.cityId = this.cityList[0].id
+
+            for (let i in this.cityList) {
+              let item = this.cityList[i]
+              this.cityDict[item.id] = item.name
+            }
+          }
+        })
       }
     },
+    created() {
+      // 加载省份列表
+      this.getProvince()
+    },
     mounted() {
-      this.currentId = this.$route.query.id
+      // 加载商品分类下拉框数据
+      this.loadCategory()
+
       // 编辑, 回显数据
+      this.currentId = this.$route.query.id
       if (this.currentId) {
         this.$http.post("/product/detailInfo", {id: this.currentId}).then((res) => {
           if (res.status == 200) {
@@ -337,7 +447,7 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box;
   }
 
@@ -464,6 +574,7 @@
       display: flex;
       justify-content: left;
       width: 50%;
+      margin-bottom: 20px;
     }
 
     .el-input {
@@ -496,6 +607,10 @@
     /* 修改下拉框长度 */
     /deep/ .el-input__inner {
       padding-right: 20px;
+    }
+
+    /deep/ .el-date-editor .el-input__inner {
+      width: 100%-7px;
     }
   }
 

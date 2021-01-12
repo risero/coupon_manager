@@ -27,16 +27,11 @@
             name: '分类管理',
             url: '/category/list'
           },
-          {
-            icon: 'iconfont icon-tuijian',
-            name: '商品推荐',
-            url: '/recommend/list'
-          },
-          {
+          /*{
             icon: 'iconfont icon-guanggao',
             name: '广告管理',
             url: '/banner/list'
-          },
+          },*/
         ]
       };
     },

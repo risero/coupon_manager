@@ -31,8 +31,8 @@
       <div class="list_content">
         <div class="button_list" ref="buttonList">
           <!-- 按钮 -->
-          <el-button type="success" class="el-icon-plus" @click="jumpPage">新增</el-button>
-          <el-button type="primary" class="el-icon-edit" @click="jumpPage">编辑</el-button>
+          <el-button type="success" class="el-icon-plus" @click="jumpPage('add')">新增</el-button>
+          <el-button type="primary" class="el-icon-edit" @click="jumpPage('edit')">编辑</el-button>
           <el-button type="danger" class="el-icon-delete">删除</el-button>
         </div>
 
@@ -52,17 +52,22 @@
             <template slot-scope="scope">{{ appTypeDict[scope.row.appType] }}</template>
           </el-table-column>
           <el-table-column
-            prop="shopName"
-            label="店铺"
-            show-overflow-tooltip>
-          </el-table-column>
-          <el-table-column
             prop="title"
             label="商品名称">
           </el-table-column>
           <el-table-column
-            prop="productType"
+            prop="categoryName"
             label="商品分类"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column
+            prop="isRecommend"
+            label="是否首页推荐">
+            <template slot-scope="scope">{{ isRecommendDict[scope.row.isRecommend]}}</template>
+          </el-table-column>
+          <el-table-column
+            prop="sequence"
+            label="推荐顺序"
             show-overflow-tooltip>
           </el-table-column>
           <el-table-column
@@ -114,15 +119,20 @@ export default {
         {
           appType: '',
           title: '',
-          shopName: '',
+          // shopName: '',
           productType: '',
-          expirationDate: ''
+          expirationDate: '',
+          categoryName: ''
         }
       ],
       appTypeDict: {
         1: '天猫',
         2: '淘宝',
         3: '拼多多'
+      },
+      isRecommendDict: {
+        0: "是",
+        1: "否"
       },
       multipleSelection: []
     }
@@ -167,14 +177,18 @@ export default {
     /**
      * 页面跳转
      */
-    jumpPage() {
-      let selected = this.multipleSelection
-      if (selected && selected.length > 1 || selected.length <= 0) {
-        this.$message.warning("请选择一行!")
-        return
+    jumpPage(type) {
+      let routerParam = {path: '/product/edit'}
+      if (type === 'edit') {
+        let selected = this.multipleSelection
+        if (selected && selected.length > 1 || selected.length <= 0) {
+          this.$message.warning("请选择一行!")
+          return
+        }
+        let row = selected[0]
+        routerParam.query = {id: row.id}
       }
-      let row = selected[0]
-      this.$router.push({path: '/product/edit', query: {id: row.id}})
+      this.$router.push(routerParam)
     }
   },
   mounted () {

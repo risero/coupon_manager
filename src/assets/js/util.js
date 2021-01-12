@@ -87,9 +87,23 @@ var dateUtils = {
 	}
 };
 
+/**
+ * 过滤tree节点中没有子节点的属性
+ */
+function filterTreeNotNode(nodes) {
+  for (let i in nodes) {
+    if (nodes[i].children.length === 0) {
+      delete nodes[i].children
+    } else {
+      filterTreeNotNode(nodes[i].children)
+    }
+  }
+}
+
 module.exports = {
 	formatTime: formatTime,
 	formatLocation: formatLocation,
 	dateUtils: dateUtils,
-	dateFormat
+  filterTreeNotNode,
+	dateFormat,
 }

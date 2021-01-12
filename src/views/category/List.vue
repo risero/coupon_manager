@@ -116,7 +116,7 @@
         </el-form-item>
         <el-form-item label="是否上架" prop="appType" :label-width="formLabelWidth">
           <el-select v-model="category.isShow" placeholder="请选择需要上架的分类">
-            <el-option v-for="item in isShowList" :label="item.label" :value="item.value"></el-option>
+            <el-option v-for="item in isShowList" :key="item.value" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="上架顺序" prop="originalPrice" :label-width="formLabelWidth">
@@ -134,13 +134,13 @@
     <!-- 删除确认弹出框 -->
     <el-dialog
       title="提示"
-      :visible.sync="centerDialogVisible"
+      :visible.sync="showDeleteDialog"
       width="30%"
       center>
-      <span>需要注意的是内容是默认不居中的</span>
+      <span>确定删除吗？</span>
       <span slot="footer" class="dialog-footer">
-    <el-button @click="centerDialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="centerDialogVisible = false">确 定</el-button>
+    <el-button type="danger" @click="remove">确 定</el-button>
+    <el-button @click="showDeleteDialog = false">取 消</el-button>
   </span>
     </el-dialog>
   </div>
@@ -195,6 +195,7 @@ export default {
         0: '上架',
         1: '下架',
       },
+      showDeleteDialog: false,
       multipleSelection: [],
       treeConfig: {
         label: 'name',
@@ -286,9 +287,9 @@ export default {
       if ('add' === type) {
         if (this.checkedNode.id) {
           // 设置表单福父节点信息
-          this.category = this.checkedNode
           this.category.parentId = this.checkedNode.nodeId
           this.category.fullName = this.checkedNode.fullName
+          this.category.isShow=1
           this.showCategoryForm=true
           return
         }
@@ -350,6 +351,10 @@ export default {
         this.$message.warning("请选择一行!")
         return
       }
+      if (!this.showDeleteDialog) {
+        this.showDeleteDialog = true
+        return
+      }
       // 批量删除
       let ids = []
       for (let key in selected) {
@@ -367,6 +372,7 @@ export default {
       })).catch((err) => {
         this.$message.error("操作失败!")
       })
+      this.showDeleteDialog = false
     }
   },
   mounted () {
