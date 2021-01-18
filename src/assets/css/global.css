@@ -24,3 +24,8 @@ html, body, #app {
     height: 35px;
     width: 190px;
 }*/
+
+/* 提示信息居中 */
+.el-message {
+    justify-content: center !important;
+}

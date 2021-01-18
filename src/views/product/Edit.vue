@@ -618,7 +618,7 @@
   .floor {
     padding: 10px 0;
     border-top: 1px solid #CCCCCC;
-    width: 100%;
+    width: 85%;
     display: block;
     position: fixed;
     bottom: 0;

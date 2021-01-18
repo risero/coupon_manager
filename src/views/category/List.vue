@@ -11,8 +11,11 @@
           ref="categoryTree"
           :data="categoryTree"
           :props="treeConfig"
+          :expand-on-click-node="false"
+          node-key="id"
           @node-click="nodeClick"
-          show-checkbox
+          :default-checked-keys="['ROOT']"
+          highlight-current
           default-expand-all>
         </el-tree>
       </div>
@@ -52,7 +55,6 @@
                     :data="categoryList"
                     tooltip-effect="dark"
                     @row-click="rowClick"
-                    @setCurrentRow="selectedRow"
                     @selection-change="handleSelectionChange"
                     :height="tableHeight">
             <el-table-column class="table_column_field" type="selection"/>
@@ -106,20 +108,20 @@
       :visible.sync="showCategoryForm"
       center
       width="50%">
-      <el-form class="category_form" :model="category">
-        <el-form-item label="所在分类" prop="title" :label-width="formLabelWidth">
+      <el-form class="category_form" :model="category" :rules="categorySaveRules">
+        <el-form-item label="所属分类" :label-width="formLabelWidth">
           <el-input v-model="category.fullName" placeholder="parent" :disabled="true"></el-input>
           <el-input v-show="false" v-model="category.parentId"></el-input>
         </el-form-item>
-        <el-form-item label="分类名称" prop="productLink" :label-width="formLabelWidth">
+        <el-form-item label="分类名称" prop="categoryName" :label-width="formLabelWidth">
           <el-input v-model="category.name" placeholder="请输入分类名称"></el-input>
         </el-form-item>
-        <el-form-item label="是否上架" prop="appType" :label-width="formLabelWidth">
+        <el-form-item label="是否上架" prop="isShow" :label-width="formLabelWidth">
           <el-select v-model="category.isShow" placeholder="请选择需要上架的分类">
             <el-option v-for="item in isShowList" :key="item.value" :label="item.label" :value="item.value"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="上架顺序" prop="originalPrice" :label-width="formLabelWidth">
+        <el-form-item label="上架顺序" prop="sequence" :label-width="formLabelWidth">
           <el-input v-model="category.sequence" placeholder="请填写上架顺序"></el-input>
         </el-form-item>
       </el-form>
@@ -154,9 +156,7 @@ export default {
   },
   directives:{
     clickNode:{
-      inserted(el,binging){
-        debugger
-        console.log("自动触发事件")
+      inserted(el){
         el.click()
       }
     }
@@ -219,19 +219,13 @@ export default {
       },
       formLabelWidth: '120px',
       showCategoryForm: false,
+      categorySaveRules: {
+        categoryName: [{required: true, message: '请输入分类名称', trigger: 'blur'}],
+        isShow: [{required: true, message: '请选择是否上架', trigger: 'change'}]
+      }
     }
   },
   methods: {
-    setTreeNode(nodes) {
-      for (let node in nodes) {
-
-      }
-    },
-    selectedRow(row) {
-      if (row) {
-        this.$refs.tableList.setCurrentRow(row)
-      }
-    },
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
@@ -241,7 +235,6 @@ export default {
     search() {
       let pageObj = this.page // 获取当前分页数据
       let searchForm = this.searchForm // 查询搜索参数
-      let _this = this
       let data = {
         page: pageObj.curPage,
         psize: pageObj.size,
@@ -264,15 +257,6 @@ export default {
       if (row) {
         this.$refs.tableList.toggleRowSelection(row)
       }
-    },
-    /**
-     * 获取分类列表数据
-     *
-     * @param level
-     * @param parentId
-     */
-    getCategoryList(level, parentId) {
-      this.search(level, parentId)
     },
     nodeClick(data) {
       if (data.id) {
@@ -339,6 +323,10 @@ export default {
       this.$http.post("/category/categoryTree").then((res) => {
         if (res.status == 200) {
           this.categoryTree = res.data
+          // 没有选中节点则设置根节点为默认节点
+          if (this.categoryTree.length > 0 && !this.checkedNode.id) {
+            this.checkedNode = this.categoryTree[0]
+          }
         }
       })
     },
@@ -363,7 +351,6 @@ export default {
         }
       }
       this.$http.post('/category/delete', {ids: ids.join(",")}).then((resp => {
-        debugger
         if (resp.status == 200) {
           this.$message.success("删除成功")
           this.search()

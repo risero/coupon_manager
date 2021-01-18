@@ -83,11 +83,11 @@
             background
             @size-change="search"
             @current-change="search"
-            :current-page="page.curPage"
+            :current-page="page.current"
             :page-sizes="page.sizes"
             :page-size="page.size"
             layout="total, sizes, prev, pager, next, jumper"
-            :total="page.totalSize">
+            :total="page.total">
           </el-pagination>
         </div>
       </div>
@@ -105,9 +105,9 @@ export default {
     return {
       tableHeight: 0,
       page: {
-        curPage: 1, // 当前页
+        current: 1, // 当前页
         sizes: [10, 20, 50, 100], // 默认可查询分页数
-        totalSize: 100, // 总记录数
+        total: 0, // 总记录数
         size: 10, // 默认显示为10条
       },
       searchForm: {
@@ -151,7 +151,7 @@ export default {
       let pageObj = this.page // 获取当前分页数据
       let searchForm = this.searchForm // 查询搜索参数
       let data = {
-        page: pageObj.curPage,
+        page: pageObj.current,
         psize: pageObj.size,
         productName: searchForm.title,
         appType: searchForm.appType,
@@ -160,8 +160,8 @@ export default {
       this.$http.post("/product/list", data).then((res) => {
         if (res.status == 200) {
           let records = res.data.records
-          this.page.curPage = res.data.page
-          this.page.totalSize = res.data.totalSize
+          this.page.current = res.data.current
+          this.page.total = res.data.total
           this.productList = res.data.records
         }
       })

@@ -68,7 +68,7 @@
 /* 左侧导航栏 */
 .left_menu {
   text-align: left !important;
-  width: 240px !important;
+  width: 15% !important;
   box-sizing: border-box !important;
   overflow: hidden;
   height: 100%;
