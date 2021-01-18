@@ -33,7 +33,7 @@
           <!-- 按钮 -->
           <el-button type="success" class="el-icon-plus" @click="jumpPage('add')">新增</el-button>
           <el-button type="primary" class="el-icon-edit" @click="jumpPage('edit')">编辑</el-button>
-          <el-button type="danger" class="el-icon-delete">删除</el-button>
+          <el-button type="danger" class="el-icon-delete" @click="remove">删除</el-button>
         </div>
 
         <!-- 表格 -->
@@ -189,6 +189,26 @@ export default {
         routerParam.query = {id: row.id}
       }
       this.$router.push(routerParam)
+    },
+    remove() {
+      let selected = this.multipleSelection;
+      if (selected.length === 0) {
+        this.$message.error("请选择一行!");
+        return
+      }
+      let idArray = []
+      for (let i in selected) {
+        idArray.push(selected[i].id)
+      }
+      let ids = idArray.join(",")
+      this.$http.post("/product/delete", {ids: ids}).then((res) => {
+        if (res.status == 200) {
+          this.$message.success("删除成功")
+          this.search()
+        }
+      }).catch((err) => {
+        this.$message.error("删除失败")
+      })
     }
   },
   mounted () {

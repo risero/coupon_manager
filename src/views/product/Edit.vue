@@ -159,7 +159,7 @@
           mainImg: "",
           productImgs: [],
           expirationDate: '',
-          status: '0',
+          status: 0,
           isRecommend: 1,
           sequence: ''
         },
@@ -239,11 +239,11 @@
         productStatusList: [
           {
             label: '上架',
-            value: "0"
+            value: 0
           },
           {
             label: '下架',
-            value: "1"
+            value: 1
           },
         ],
         dialogImageUrl: '',
