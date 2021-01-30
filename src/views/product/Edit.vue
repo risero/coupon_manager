@@ -269,7 +269,7 @@
             this.$message.error("商品其他不能为空")
             return
           }
-
+          debugger
           // 保存
           let data = this.product
           if (this.product.cid && this.product.cid.length > 0) {
@@ -281,7 +281,7 @@
           }
           data = JSON.parse(JSON.stringify(this.product));
           data.expirationDate = expirationDate
-          data.moreImg = this.product.productImgs.join()
+          data.moreImg = this.product.productImgs.join(",")
           data.city = this.cityDict[this.product.cityId]
           data.province = this.provinceDict[this.product.provinceId]
           this.$http.post("/product/edit", data).then((resp) => {
@@ -417,11 +417,13 @@
             if (res.data.imgs) {
               imgArr = res.data.imgs.split(",")
             }
+            debugger
             // 第1张图片为主图片
             if (imgArr.length > 0) {
               this.tempImgUrl = imgArr[0]
               this.product.mainImg = imgArr[0]
             }
+            imgArr.splice(0, 1)
             // 第1张图片之后为更多图片
             for (let i = 0; i < imgArr.length; i++) {
               this.product.productImgs.push(imgArr[i])

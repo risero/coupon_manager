@@ -293,8 +293,9 @@ export default {
      * 保存节点信息
      */
     saveCategory() {
-      if (!this.category.parentId) {
+      if (this.category.id !== 'ROOT' && !this.category.parentId) {
         this.$message.error("操作有误，没有父节点数据")
+        return;
       }
       let data = {
         parentId: this.category.parentId,
