@@ -29,10 +29,10 @@ axios.interceptors.response.use(res=>{
   }
 })
 
-axios.defaults.baseURL = 'http://localhost:8080'
+// axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = 'http://39.108.12.238:8080/coupon'
 // 引入全局通用样式
 import '@/assets/css/global.css'
-
 
 Vue.config.productionTip = false
 
